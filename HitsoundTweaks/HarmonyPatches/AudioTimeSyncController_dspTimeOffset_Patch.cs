@@ -34,6 +34,12 @@ internal class AudioTimeSyncController_dspTimeOffset_Patch : IAffinity
         if (____state == AudioTimeSyncController.State.Stopped)
         {
             firstCorrectionDone = false; // easiest way to reset this flag, Update is reliably called at least a few frames before playback starts
+            dspTimeOffset = 0;
+            return;
+        }
+
+        // Keep the original `dspTimeOffset` during recording
+        if (Time.captureFramerate != 0) {
             return;
         }
 
@@ -45,7 +51,7 @@ internal class AudioTimeSyncController_dspTimeOffset_Patch : IAffinity
             averageOffset = targetOffset;
             averageCount = 1;
             firstCorrectionDone = true;
-            ____dspTimeOffset = dspTimeOffset = targetOffset;
+            dspTimeOffset = targetOffset;
         }
         else
         {
@@ -59,9 +65,11 @@ internal class AudioTimeSyncController_dspTimeOffset_Patch : IAffinity
                 // set dspTimeOffset to whatever targetOffset encountered that is closest to the average
                 if (Math.Abs(targetOffset - (averageOffset + syncOffset)) < Math.Abs(dspTimeOffset - (averageOffset + syncOffset)))
                 {
-                    ____dspTimeOffset = dspTimeOffset = targetOffset;
+                    dspTimeOffset = targetOffset;
                 }
             }
         }
+
+        ____dspTimeOffset = dspTimeOffset;
     }
 }
